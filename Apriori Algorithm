@@ -1,0 +1,200 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+
+public class AprioriAlgorithm {
+
+	public static void main(String[] args) {
+		// input data from dataset
+		Map<String, String[]> TDB = new HashMap<String, String[]>();
+
+		String[]T100={"M", "O", "N", "N", "K","E", "Y", "Y","Y"};
+		String[]T200= {"D", "D", "O", "N", "K", "E", "Y","Y"};
+		String[]T300 ={"M", "M", "A", "K", "E", "E","E"};
+		String[]T400 ={"M", "U", "C", "C","C", "E", "O","O"};
+		String[]T500 ={"C", "O", "O", "K", "I", "I", "E", "Y"};
+
+		TDB.put("T100", T100);
+		TDB.put("T200", T200);
+		TDB.put("T300", T300);
+		TDB.put("T400", T400);
+		TDB.put("T500", T500);
+
+		Apriori(TDB, 60, 75);
+
+
+	}
+
+	// Ck: candidate itemset of size k
+	// Lk: frequent itemset of size k
+	// generate C1, the first candidate itemSet.
+	public static void Apriori(Map<String, String[]> TDB, int min_pro, int min_cof) {
+		int TDBsize = TDB.size();
+
+		// create C1
+		Map<String, Integer> C1 = genC1(TDB);
+		printHash(C1, TDBsize);
+		System.out.println();
+
+		// create L1
+		Map<String, Integer> L1 = genLx(C1, min_pro, min_cof, TDBsize);
+		printHash(L1, TDBsize);
+		System.out.println();
+
+		// while loop before Lk has no value.
+		while (L1.size() > 1) {
+			Map<String, Integer> C2 = genCx(TDB, L1);
+			printHash(C2, TDBsize);
+			System.out.println();
+
+			Map<String, Integer> L2 = genLx(C2, min_pro, min_cof, TDBsize);
+			printHash(L2, TDBsize);
+			System.out.println();
+			L1 = L2;
+			C1 = C2;
+		}
+
+	}
+
+	// generate C1
+	public static Map<String, Integer> genC1(Map<String, String[]> TDB) {
+		Map<String, Integer> C1 = new HashMap<String, Integer>();
+		for (String keyset : TDB.keySet()) {
+			
+			String[] list = TDB.get(keyset);
+			
+			String prv="";
+			for (String a : list) {
+				String curr=a;
+				if(curr == prv)
+					continue;
+				if (C1.keySet().contains(a))
+					C1.put(a, C1.get(a) + 1);
+				else
+					C1.put(a, 1);
+				prv=curr;
+			
+			}
+		}
+		return C1;
+	}
+
+	// generate L(x+1) from Cx, deleting key with the minimum frequent.
+	public static Map<String, Integer> genLx(Map<String, Integer> cx, int min_support, int min_conf, int transaction) {
+		double minimum =  ((double) min_support * transaction / 100);
+		ArrayList<String> removelist = new ArrayList<String>();
+		for (String name : cx.keySet()) {
+			int count = cx.get(name);
+			if (count < minimum) {
+				removelist.add(name);
+			}
+		}
+		for (String key : removelist) {
+			cx.remove(key);
+		}
+		return cx;
+	}
+
+	// generate C(k+1) from Lx, generating combined itemset from Lx and count
+	// the frequent
+	// of generated itemset in data set.
+	public static Map<String, Integer> genCx(Map<String, String[]> TDB, Map<String, Integer> Lx) {
+		Map<String, Integer> newCx = new HashMap<String, Integer>();
+
+		// generate combined itemset list "list" from Lx without duplicate
+		// Map<String, Integer> Lx
+		int index = 0;
+		String[] list = new String[Lx.size()];
+		for (String keyset : Lx.keySet()) {
+			list[index++] = keyset;
+		}
+
+		ArrayList<String> newList = new ArrayList<String>();
+		for (int i = 0; i < list.length - 1; i++) {
+			for (int j = i + 1; j < list.length; j++) {
+				String newString = "";
+				String first = list[i];
+				String second = list[j];
+				int index1 = 0;
+				int index2 = 0;
+				while (index1 + index2 < first.length()+second.length()) {
+					if (index1 == first.length()) {
+						newString += second.charAt(index2);
+						index2++;
+					} else if (index2 == second.length()) {
+						newString += first.charAt(index1);
+						index1++;
+					} else if (first.charAt(index1) == second.charAt(index2)) {
+						newString += first.charAt(index1);
+						index1++;
+						index2++;
+					} else if (first.charAt(index1) > second.charAt(index2)) {
+						newString += second.charAt(index2);
+
+						index2++;
+					} else if (first.charAt(index1) < second.charAt(index2)) {
+						newString += first.charAt(index1);
+						index1++;
+					}
+
+				}
+				newList.add(newString);
+			}
+		}
+
+		// make string [] array to one string
+		ArrayList<String> TDBlist = new ArrayList<String>();
+		for (String keyset : TDB.keySet()) {
+			String newTDBstring = "";
+			String[] candidate1 = TDB.get(keyset);
+			Arrays.sort(candidate1);
+			for (String a : candidate1)
+				newTDBstring += a;
+			TDBlist.add(newTDBstring);
+		}
+
+		// count all candidates in c(k+1) that are contained in dataset TDB for
+		for (String candidate : newList) {
+			int count = 0;
+			for (String stringfromTDB : TDBlist) {
+				if (containstr(candidate, stringfromTDB)) {
+					count++;
+				}
+			}
+			if (count > 0)
+				newCx.put(candidate, count);
+		}
+		return newCx;
+	}
+
+	public static boolean containstr(String str1, String str2) {
+		int i1 = 0;
+		int i2 = 0;
+		while (i1 < str1.length()) {
+			if (i2 == str2.length()) {
+				return false;
+			}
+			char char1 = str1.charAt(i1);
+			char char2 = str2.charAt(i2);
+			if (char1 == char2) {
+				i1++;
+				i2++;
+			} else {
+				i2++;
+			}
+		}
+		return true;
+	}
+
+	public static void printHash(Map<String, Integer> c1, int size) {
+		for (String name : c1.keySet()) {
+			String key = name.toString();
+			int value = c1.get(name);
+			System.out.println(
+					"{" + key + "}" + " sup: " + value + " " + " " + (int) ((double) value / size * 100) + " percent");
+
+		}
+	}
+}
