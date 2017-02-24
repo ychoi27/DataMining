@@ -10,19 +10,21 @@ public class AprioriAlgorithm {
 		// input data from dataset
 		Map<String, String[]> TDB = new HashMap<String, String[]>();
 
-		String[]T100={"M", "O", "N", "N", "K","E", "Y", "Y","Y"};
-		String[]T200= {"D", "D", "O", "N", "K", "E", "Y","Y"};
-		String[]T300 ={"M", "M", "A", "K", "E", "E","E"};
-		String[]T400 ={"M", "U", "C", "C","C", "E", "O","O"};
-		String[]T500 ={"C", "O", "O", "K", "I", "I", "E", "Y"};
-
+		String[]T100={"M","D", "O", "N", "K","E", "E","Y"};
+		String[]T200= {"D", "O", "N", "K", "E", "E", "Y","C"};
+		String[]T300 ={"M", "A", "K", "K", "E", "E","C","C"};
+		String[]T400 ={"M", "U", "U", "C","K", "Y", "E","E"};
+		String[]T500 ={"C", "C", "O", "O", "K", "I", "E"};
+		String[]T600 ={"D", "O", "N", "K", "K", "K", "I", "I", "C"};
+		
 		TDB.put("T100", T100);
 		TDB.put("T200", T200);
 		TDB.put("T300", T300);
 		TDB.put("T400", T400);
 		TDB.put("T500", T500);
-
-		Apriori(TDB, 60, 75);
+		TDB.put("T600", T600);
+		
+		Apriori(TDB, 33, 75);
 
 
 	}
@@ -103,7 +105,7 @@ public class AprioriAlgorithm {
 	public static Map<String, Integer> genCx(Map<String, String[]> TDB, Map<String, Integer> Lx) {
 		Map<String, Integer> newCx = new HashMap<String, Integer>();
 
-		// generate combined itemset list "list" from Lx without duplicate
+		// generate combined itemset, candidates, list "list" from Lx without duplicate
 		// Map<String, Integer> Lx
 		int index = 0;
 		String[] list = new String[Lx.size()];
@@ -140,7 +142,8 @@ public class AprioriAlgorithm {
 					}
 
 				}
-				newList.add(newString);
+				if(newString.length()==first.length()+1)
+					newList.add(newString);
 			}
 		}
 
